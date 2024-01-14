@@ -3,7 +3,7 @@ import cv2 as cv
 import matplotlib.pyplot as plt
 import requests
 import json
-
+import easyocr
 # Télécharger les images de la base de donnée
 #   Les classer dans 6 dossiers différents selon leur clase
 # Charger l'image source
@@ -17,8 +17,15 @@ resolution = [569,400]
 xp_region =[[6,3],[54,48]]
 class_color_region = [[52,6], [58,11]]
 image_roi =[[60, 60], [285, 268]]
-image_roi2 = [[115, 25], [275, 38]]
+image_roi2 = [[80, 18], [300, 40]]
 image_roi3 = [[0,100],[400, 400]]
+text1_roi = [[45,300], [390, 360]]
+us_standart_format = [63, 88]
+ratioyx = us_standart_format[1]/us_standart_format[0]
+
+rel_pos_centroid_namebox1 = [0.5, 0.05624]
+rel_pos_centroid_namebox2 = [0.5, 0.6053]
+
 path = r"D:\Louis-Nicolas\projet\arkham_sorter\img\02111.png"
 
 path_src = r"D:\Louis-Nicolas\projet\arkham_sorter\img\global.png"
@@ -41,6 +48,7 @@ def dl_collection_img():
 
 def image_source():
     roi_camera = [[204,1926],[1491,3667]] 
+    #roi_camera = [[204,1926],[1491,1491 + int(round((roi_camera[0][1]- roi_camera[0][0])*ratioyx))] ] 
     img_src = cv.imread(path_src,cv.IMREAD_GRAYSCALE)
     return img_src[roi_camera[0][1] : roi_camera[1][1], roi_camera[0][0] : roi_camera[1][0]]
 
@@ -69,8 +77,9 @@ def seach_card(collection, THRE =0.9 ):
                 card_src = image_source()
                 img_ratio = card_img.shape[1]/card_src.shape[1]
                 card_src = cv.resize(card_src, None, fx= img_ratio, fy= img_ratio)                
-                    
-                card_template = roi_template(card_img, image_roi3)
+                zone_text1_src = roi_template(card_src, text1_roi)
+                     
+                card_template = roi_template(card_img, image_roi2)
                 res = cv.matchTemplate(card_src, card_template, cv.TM_SQDIFF_NORMED)
                 min_val, max_val, min_loc, max_loc =cv.minMaxLoc(res)
                 if min_val < best:
@@ -89,7 +98,15 @@ def seach_card(collection, THRE =0.9 ):
     
     remove = 0
             
-                         
+def ocr_card_name(img : np.ndarray, resolution  : tuple = (569, 400)):
+    #card_src = image_source()
+    #img_ratio = resolution[1]/img.shape[1]
+    #card_src = cv.resize(img, None, fx= img_ratio, fy= img_ratio)                
+    #zone_text1_src = roi_template(card_src, text1_roi)
+    
+    reader =easyocr.Reader(['fr'], gpu=True)
+    return reader.readtext(img)
+    
            
 #image source from camera
 def test_opencv():    
@@ -163,6 +180,8 @@ def main() :
     with open('collection.json') as collection_handler :
         collection = json.load(collection_handler)
     
+    img = cv.imread("img/test2.png")
+    ocr_card_name(img)
     seach_card(collection= collection)
     ouai = 0
     
