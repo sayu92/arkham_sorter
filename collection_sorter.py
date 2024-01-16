@@ -129,7 +129,8 @@ def trouver_position(nom_carte, xp = 0 ):
                                 
                 if card.get("name") == nom_carte and card.get("xp") == xp:
                     #print(f"page {pos//9 +1}, emplacement {pos%9 + 1}")
-                    return [pos//9 +1, pos%9+1] #[page, pos]
+                    return [nom_carte, pos//9 +1, pos%9+1] #[page, pos]
+        return None
         
     elif xp == 0:
         for classe in [CHERCHEUR, GARDIEN, MYSTIQUE, TRUAND, SURVIVANT, NEUTRE]:
@@ -139,7 +140,8 @@ def trouver_position(nom_carte, xp = 0 ):
                 
                 if card.get("name") == nom_carte :
                     #print(f"page {pos//9 +1}, emplacement {pos%9 + 1}")
-                    return [pos//9 +1, pos%9+1] #[page, pos]
+                    return [nom_carte, pos//9 +1, pos%9+1] #[page, pos]
+        return None
                 
 with open('collection.json', 'w') as fout:
     json.dump([sort_0xp, sort_xp], fout)

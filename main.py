@@ -2,8 +2,15 @@ import cv2 as cv
 import matplotlib.pyplot as plt
 from img_card_detector import ocr_card_name
 from collection_sorter import trouver_position
+import easyocr
+
 #TODO TESTER AVEC UNE IMAGE QU ON RESIZE
 #TODO est ce qu'on rescale/resize de toute manière le stream video/camera ?
+#TODO Eviter les crash si le flux video est perdu
+#TODO Problème pour afficher le nom de la carte quand celle ci possède des accents
+#TODO Mettre une forme de latence pour afficher le nom de la carte affin d'éviter le "clignotement"
+#TODO Prendre en compte
+#TODO Enlever les valeurs hardcoded (les résolutions, le placement du texte)
 
 path_ip = "http://192.168.1.108:8080/video"
 rel_pos_centroid_namebox1 = [0.525, 0.05624]
@@ -11,11 +18,10 @@ rel_pos_centroid_namebox2 = [0.5, 0.6053]
 size_ratio_boxname1 = [0.655, 0.077]
 size_ratio_boxname2 = [0.8, 0.077]
 
-def update(source : str, ratio : float = 1.4225, reduc : float = 0.8, processing_resolution  : tuple = (569, 400), resize : bool = True):
-    capture = cv.VideoCapture(source)
-    ret, frame = capture.read()
-    
-    #frame = cv.imread("img/02111.png") # TOREMOVE
+def update(source : str, ratio : float = 1.4225, reduc : float = 0.8, processing_resolution  : tuple = (569, 400), resize : bool = True, capture_resolution : tuple = (960,540)):
+    capture = cv.VideoCapture(source) # TODO Put those 3 lines a setup method
+    ret, original_frame = capture.read()
+    frame = cv.resize(original_frame,None, fx=0.5,fy=0.5, interpolation=cv.INTER_AREA)
     
     if resize:
         h, w = frame.shape[:2]
@@ -29,7 +35,7 @@ def update(source : str, ratio : float = 1.4225, reduc : float = 0.8, processing
         #roi draw n extract
         roi_capture = frame[roi_pt1[1]:roi_pt2[1],roi_pt1[0]:roi_pt2[0]]
         img_ratio = processing_resolution[1]/roi_capture.shape[1]
-        roi_capture = cv.resize(roi_capture, None, fx= img_ratio, fy= img_ratio)  
+        roi_capture = cv.resize(roi_capture, None, fx= img_ratio, fy= img_ratio, interpolation=cv.INTER_AREA)
         roi_capture = cv.cvtColor(roi_capture, cv.COLOR_RGB2GRAY)              
     
     else: #TODO this section will led to bug, only valuable for debug purpose, 
@@ -62,22 +68,21 @@ def update(source : str, ratio : float = 1.4225, reduc : float = 0.8, processing
 
 if __name__ == '__main__':
     
-    while True :
-        frame, boxname1, boxname2 = update(path_ip, reduc=0.8, resize=True)
+    reader =easyocr.Reader(['fr'], gpu=True)
     
-        # for boxname in [boxname1, boxname2]: 
-        #     result = ocr_card_name(boxname)
-        
-        #     if len(result) == 1: # Any other answer is a false positive
-        #         position = trouver_position(result[0][1])
-        #         cv.putText(frame, f"Page: {result[0]}, Position: {result[1]}", (300,300))
-            
+    while True:
+        frame, boxname1, boxname2 = update(path_ip, reduc=0.8, resize=True)
+
+        for boxname in [boxname1, boxname2]:
+            result = ocr_card_name(boxname)
+
+            if len(result) == 1: # Any other answer is a false positive
+                position = trouver_position(result[0][1])
+
+                if position is not None:
+                    cv.putText(frame, f"Page: {position[0]}, Position: {position[1]}", (300,300))
+                    break
         cv.imshow("camera", frame)
         k = cv.waitKey(10) & 0XFF
-    
-    cv.destroyAllWindows()
-    
-    #plt.imshow(roi[:,:,::-1]) # Difference between this and c[:][:][::-1]
-    #plt.show()
-    
-    pass
+        
+cv.destroyAllWindows()

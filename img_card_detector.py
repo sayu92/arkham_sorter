@@ -98,14 +98,13 @@ def seach_card(collection, THRE =0.9 ):
     
     remove = 0
             
-def ocr_card_name(img : np.ndarray, resolution  : tuple = (569, 400)):
+def ocr_card_name(img : np.ndarray, reader : easyocr.Reader, resolution  : tuple = (569, 400)):
     #card_src = image_source()
     #img_ratio = resolution[1]/img.shape[1]
     #card_src = cv.resize(img, None, fx= img_ratio, fy= img_ratio)                
     #zone_text1_src = roi_template(card_src, text1_roi)
     
-    reader =easyocr.Reader(['fr'], gpu=True)
-    return reader.readtext(img)
+    return reader.readtext(img, min_size=2)
     
            
 #image source from camera
