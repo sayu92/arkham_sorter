@@ -4,8 +4,8 @@ from img_card_detector import ocr_card_name
 from collection_sorter import trouver_position
 import easyocr
 
-#TODO TESTER AVEC UNE IMAGE QU ON RESIZE
-#TODO est ce qu'on rescale/resize de toute manière le stream video/camera ?
+#TODO [x] TESTER AVEC UNE IMAGE QU ON RESIZE -> Pas de grande différence sur la réalisation de l'ocr
+#TODO [x] est ce qu'on rescale/resize de toute manière le stream video/camera ? : Non on ne peut pas directement, a posteriori oui
 #TODO Eviter les crash si le flux video est perdu
 #TODO Problème pour afficher le nom de la carte quand celle ci possède des accents
 #TODO Mettre une forme de latence pour afficher le nom de la carte affin d'éviter le "clignotement"
